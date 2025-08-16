@@ -32,12 +32,14 @@ class TestConfig:
     def test_env_var_loading(self):
         """Test loading configuration from environment variables"""
         test_config = Config()
+        test_config.reload()  # Reload to pick up patched environment
         assert test_config.ANTHROPIC_API_KEY == 'test_api_key_123'
     
     @patch.dict(os.environ, {}, clear=True)
     def test_missing_api_key(self):
         """Test behavior when API key is missing"""
         test_config = Config()
+        test_config.reload()  # Reload to pick up cleared environment
         assert test_config.ANTHROPIC_API_KEY == ""
     
     def test_global_config_instance(self):
@@ -276,6 +278,7 @@ class TestAPIConnectivity:
     def test_api_key_from_environment(self):
         """Test API key loading from environment"""
         test_config = Config()
+        test_config.reload()  # Reload to pick up patched environment
         
         assert test_config.ANTHROPIC_API_KEY == 'sk-ant-api03-test123'
         assert test_config.ANTHROPIC_API_KEY.startswith('sk-ant-')

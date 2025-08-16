@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -9,7 +9,7 @@ load_dotenv()
 class Config:
     """Configuration settings for the RAG system"""
     # Anthropic API settings
-    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+    ANTHROPIC_API_KEY: str = field(default="")
     ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
     
     # Embedding model settings
@@ -23,6 +23,14 @@ class Config:
     
     # Database paths
     CHROMA_PATH: str = "./chroma_db"  # ChromaDB storage location
+    
+    def __post_init__(self):
+        """Load environment variables after initialization"""
+        self.ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+    
+    def reload(self):
+        """Reload configuration from environment variables"""
+        self.__post_init__()
 
 config = Config()
 

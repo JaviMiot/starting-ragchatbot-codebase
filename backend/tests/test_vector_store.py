@@ -82,7 +82,9 @@ class TestVectorStore:
         
         self.mock_client.get_or_create_collection.side_effect = [
             self.mock_course_catalog,
-            self.mock_course_content
+            self.mock_course_content,
+            self.mock_course_catalog,  # For clear_all_data recreation
+            self.mock_course_content   # For clear_all_data recreation
         ]
         
         with patch('vector_store.chromadb.PersistentClient') as mock_chroma:

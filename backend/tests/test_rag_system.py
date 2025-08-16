@@ -144,27 +144,29 @@ class TestRAGSystem:
         self.mock_ai_generator.generate_response.return_value = expected_response
         self.rag_system.tool_manager.get_last_sources = Mock(return_value=[])
         
-        # Execute query with session
-        response, sources = self.rag_system.query("Follow up question", session_id)
-        
-        # Assertions
-        assert response == expected_response
-        assert sources == []
-        
-        # Verify session history was retrieved
-        self.mock_session_manager.get_conversation_history.assert_called_once_with(session_id)
-        
-        # Verify AI generator got conversation history
-        call_args = self.mock_ai_generator.generate_response.call_args[1]
-        assert call_args["conversation_history"] == conversation_history
-        
-        # Verify conversation was updated
-        self.mock_session_manager.add_exchange.assert_called_once_with(
-            session_id, "Follow up question", expected_response
-        )
-        
-        # Verify sources were reset
-        self.rag_system.tool_manager.reset_sources.assert_called_once()
+        # Mock the reset_sources method
+        with patch.object(self.rag_system.tool_manager, 'reset_sources') as mock_reset:
+            # Execute query with session
+            response, sources = self.rag_system.query("Follow up question", session_id)
+            
+            # Assertions
+            assert response == expected_response
+            assert sources == []
+            
+            # Verify session history was retrieved
+            self.mock_session_manager.get_conversation_history.assert_called_once_with(session_id)
+            
+            # Verify AI generator got conversation history
+            call_args = self.mock_ai_generator.generate_response.call_args[1]
+            assert call_args["conversation_history"] == conversation_history
+            
+            # Verify conversation was updated
+            self.mock_session_manager.add_exchange.assert_called_once_with(
+                session_id, "Follow up question", expected_response
+            )
+            
+            # Verify sources were reset
+            mock_reset.assert_called_once()
     
     def test_query_prompt_format(self):
         """Test that query prompt is formatted correctly"""
@@ -257,6 +259,9 @@ class TestRAGSystem:
     
     def test_add_course_folder_clear_existing(self):
         """Test folder processing with clear_existing=True"""
+        # Set up mock to return empty list for get_existing_course_titles
+        self.mock_vector_store.get_existing_course_titles.return_value = []
+        
         with patch('os.path.exists') as mock_exists:
             with patch('os.listdir') as mock_listdir:
                 mock_exists.return_value = True
@@ -405,7 +410,7 @@ class TestRAGSystemWithToolIntegration:
                     query="AI fundamentals",
                     course_name="AI Course"
                 )
-                return f"Based on the course materials: {tool_result[:50]}..."
+                return f"Based on the course materials: {tool_result[:100]}..."
             return "Direct response without tools"
         
         self.mock_ai_generator.generate_response.side_effect = mock_generate_response
